@@ -100,13 +100,13 @@ export default function MamaAiChatbot() {
       {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 transition-all duration-300 ${isOpen ? 'rotate-90 scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`fixed right-6 bottom-20 md:bottom-6 h-14 w-14 rounded-full shadow-lg z-[60] transition-all duration-300 ${isOpen ? 'rotate-90 scale-0 opacity-0' : 'scale-100 opacity-100'}`}
       >
         <MessageCircle className="h-8 w-8" />
       </Button>
 
       {/* Chat Window */}
-      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 transform ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-10 pointer-events-none'}`}>
+      <div className={`fixed right-6 bottom-24 md:bottom-6 z-[60] transition-all duration-300 transform ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-10 pointer-events-none'}`}>
         <Card className="w-[350px] md:w-[400px] h-[500px] flex flex-col shadow-2xl border-2 border-primary/20">
           <CardHeader className="bg-primary text-primary-foreground p-4 flex flex-row items-center justify-between rounded-t-lg">
             <div className="flex items-center gap-2">
