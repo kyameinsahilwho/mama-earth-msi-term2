@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "reward-product",
+      "description": "A small bottle of a skincare product.",
+      "imageUrl": "https://images.unsplash.com/photo-1580870069867-74c57ee1bb07?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxza2luY2FyZSUyMHByb2R1Y3R8ZW58MHx8fHwxNzY0NDcwNDY5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "skincare product"
+    },
+    {
+      "id": "reward-discount",
+      "description": "Illustration of a discount tag.",
+      "imageUrl": "https://images.unsplash.com/photo-1563302111-eab4b145e6c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkaXNjb3VudCUyMHRhZ3xlbnwwfHx8fDE3NjQ1NzA0NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "discount tag"
+    },
+    {
+      "id": "reward-bundle",
+      "description": "A collection of various skincare products.",
+      "imageUrl": "https://images.unsplash.com/photo-1670201202784-ec638a82bca8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxza2luY2FyZSUyMGJ1bmRsZXxlbnwwfHx8fDE3NjQ1NzA0NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "skincare bundle"
+    }
+  ]
 }
