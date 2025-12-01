@@ -49,8 +49,10 @@ export default function GardenPage() {
   const handlePlantSeed = async () => {
     if (!appState.user?.id) return;
     
-    const cost = 50;
-    if (appState.points < cost && plants.length > 0) {
+    const isFirstPlant = plants.length === 0;
+    const cost = isFirstPlant ? 0 : 50;
+
+    if (!isFirstPlant && appState.points < cost) {
         toast({ variant: "destructive", title: "Not enough points", description: `Need ${cost} points to plant a new seed.` });
         return;
     }
@@ -60,10 +62,10 @@ export default function GardenPage() {
         await plantSeed(appState.user.id, newPlantName);
         setIsNamingOpen(false);
         
-        if (plants.length > 0) {
-            // Deduct points logic would go here
+        if (!isFirstPlant) {
+            addPoints(-cost, "Planted new seed");
         }
-        toast({ title: "Seed Planted!", description: "Water it to help it grow." });
+        toast({ title: "Seed Planted!", description: isFirstPlant ? "Your first plant is on us! Water it to help it grow." : "Water it to help it grow." });
         fetchPlants();
     } catch (err) {
         console.error(err);
@@ -91,7 +93,7 @@ export default function GardenPage() {
         addPoints(-10, "Watering Plant"); 
 
         if (updated.stage > plant.stage) {
-            setTimeout(() => playSound("success"), 1000); // Delay success sound slightly
+            setTimeout(() => playSound("success"), 200); // Delay success sound slightly
             if (updated.stage === 5) {
                 toast({ title: "🌸 FULL BLOOM! 🌸", description: "You've unlocked a special reward!" });
             } else {
@@ -104,7 +106,7 @@ export default function GardenPage() {
         console.error(err);
     } finally {
         // Stop animation after a fixed duration
-        setTimeout(() => setWateringPlantId(null), 500);
+        setTimeout(() => setWateringPlantId(null), 200);
     }
   };
 
