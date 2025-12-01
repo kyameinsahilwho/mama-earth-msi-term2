@@ -36,8 +36,8 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
   const [copied, setCopied] = useState(false);
 
   const startQuiz = async () => {
-    if (appState.quizTaken) {
-      toast({ title: "Quiz Already Taken", description: "You can only take the quiz once per day." });
+    if (appState.quizzesTakenToday >= 5) {
+      toast({ title: "Daily Limit Reached", description: "You can only take 5 quizzes per day." });
       return;
     }
     
@@ -79,11 +79,11 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       setQuizFinished(true);
-      const pointsEarned = score * 5;
-      if (!appState.quizTaken && pointsEarned > 0) {
+      const pointsEarned = score * 10;
+      if (appState.quizzesTakenToday < 5 && pointsEarned > 0) {
         addPoints(pointsEarned, `Skin Quiz (${score}/${quizQuestions.length})`);
       }
-      setAppState(prev => ({...prev, quizTaken: true}));
+      setAppState(prev => ({...prev, quizzesTakenToday: (prev.quizzesTakenToday || 0) + 1}));
     }
   };
   
@@ -165,12 +165,12 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
     {
       title: "Skin Quiz",
       description: "Take our skin quiz for personalized advice.",
-      reward: 50,
+      reward: 100,
       icon: <Gift className="w-6 h-6 text-primary" />,
       buttonText: "Take Quiz",
       action: startQuiz,
-      disabled: appState.quizTaken,
-      constraint: "Up to 50 points",
+      disabled: appState.quizzesTakenToday >= 5,
+      constraint: `Quiz ${appState.quizzesTakenToday || 0}/5`,
     },
     {
       title: "Refer a Friend",
@@ -249,16 +249,20 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
                 <Award className="w-16 h-16 text-yellow-500" />
                 <h3 className="text-2xl font-bold">Great job!</h3>
                 <p className="text-muted-foreground">You scored {quizScore} out of {quizQuestions.length}.</p>
-                <p className="font-bold text-primary text-lg">+{quizScore * 5} Leaf Points have been added!</p>
+                <p className="font-bold text-primary text-lg">+{quizScore * 10} Leaf Points have been added!</p>
               </div>
             ) : quizQuestions.length > 0 ? (
               <div className="space-y-4 animate-in fade-in">
                 <Label className="font-bold text-base text-center block">{quizQuestions[currentQuestionIndex].question}</Label>
                 <RadioGroup onValueChange={setSelectedAnswer} value={selectedAnswer ?? undefined}>
                   {quizQuestions[currentQuestionIndex].options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 border rounded-md">
+                    <div 
+                      key={index} 
+                      className={`flex items-center space-x-3 p-3 border rounded-md cursor-pointer transition-colors ${selectedAnswer === index.toString() ? 'bg-primary/10 border-primary' : 'bg-secondary/50 hover:bg-secondary/80'}`}
+                      onClick={() => setSelectedAnswer(index.toString())}
+                    >
                       <RadioGroupItem value={index.toString()} id={`q${currentQuestionIndex}-o${index}`} />
-                      <Label htmlFor={`q${currentQuestionIndex}-o${index}`} className="flex-1 cursor-pointer">{option}</Label>
+                      <Label htmlFor={`q${currentQuestionIndex}-o${index}`} className="flex-1 cursor-pointer pointer-events-none">{option}</Label>
                     </div>
                   ))}
                 </RadioGroup>

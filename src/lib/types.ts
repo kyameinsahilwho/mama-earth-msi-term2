@@ -20,7 +20,7 @@ export interface AppState {
   lastRoutineDate: string | null;
   routineCountToday: number;
   streak: number;
-  quizTaken: boolean;
+  quizzesTakenToday: number;
   referrals: number;
   referredBy?: string | null; // ID of the user who referred this user
   feedbackGiven: number;

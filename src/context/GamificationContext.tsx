@@ -22,7 +22,7 @@ const INITIAL_STATE: AppState = {
   lastRoutineDate: null,
   routineCountToday: 0,
   streak: 0,
-  quizTaken: false,
+  quizzesTakenToday: 0,
   referrals: 0,
   referredBy: null,
   feedbackGiven: 0,
@@ -89,7 +89,7 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
           lastRoutineDate: profile.last_routine_date,
           routineCountToday: profile.routine_count_today,
           streak: profile.streak,
-          quizTaken: profile.quiz_taken,
+          quizzesTakenToday: profile.quizzes_taken_today || 0,
           referrals: profile.referrals,
           referredBy: profile.referred_by,
           feedbackGiven: profile.feedback_given,
@@ -191,7 +191,7 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
         if (newState.lastRoutineDate !== prev.lastRoutineDate) updates.last_routine_date = newState.lastRoutineDate;
         if (newState.routineCountToday !== prev.routineCountToday) updates.routine_count_today = newState.routineCountToday;
         if (newState.streak !== prev.streak) updates.streak = newState.streak;
-        if (newState.quizTaken !== prev.quizTaken) updates.quiz_taken = newState.quizTaken;
+        if (newState.quizzesTakenToday !== prev.quizzesTakenToday) updates.quizzes_taken_today = newState.quizzesTakenToday;
         if (newState.referrals !== prev.referrals) updates.referrals = newState.referrals;
         if (newState.feedbackGiven !== prev.feedbackGiven) updates.feedback_given = newState.feedbackGiven;
 

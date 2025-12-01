@@ -13,7 +13,7 @@ export interface DbProfile {
   last_routine_date: string | null;
   routine_count_today: number;
   streak: number;
-  quiz_taken: boolean;
+  quizzes_taken_today: number;
   referrals: number;
   referred_by: string | null;
   feedback_given: number;
