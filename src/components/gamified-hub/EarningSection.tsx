@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Zap, Calendar, Star, Users, MessageSquare, Gift, Copy, Check, Loader2, Award } from "lucide-react";
 import type { AppState } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { generateQuiz, QuizQuestion } from "@/ai/flows/quiz-flow";
+import { generateQuiz, type QuizQuestion } from "@/ai/flows/quiz-flow";
 
 interface EarningSectionProps {
   appState: AppState;
@@ -24,21 +24,20 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
 
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [quizScore, setQuizScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
-  const [feedbackText, setFeedbackText] = useState("");
+  
   const referralCode = appState.user?.referralCode || "Generating...";
   const [copied, setCopied] = useState(false);
 
   const startQuiz = async () => {
     if (appState.quizTaken) {
-      toast({ title: "Quiz Already Taken", description: "You can only take the quiz once." });
+      toast({ title: "Quiz Already Taken", description: "You can only take the quiz once per day." });
       return;
     }
     
@@ -51,7 +50,11 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
 
     try {
       const quizData = await generateQuiz({ topic: "skincare" });
-      setQuizQuestions(quizData.questions);
+      if (quizData.questions && quizData.questions.length > 0) {
+        setQuizQuestions(quizData.questions);
+      } else {
+        throw new Error("No questions generated");
+      }
     } catch (error) {
       console.error("Failed to generate quiz:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not load the quiz. Please try again." });
@@ -65,7 +68,7 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
     if (selectedAnswer === null) return;
 
     const currentQuestion = quizQuestions[currentQuestionIndex];
-    if (selectedAnswer === currentQuestion.answerIndex) {
+    if (parseInt(selectedAnswer) === currentQuestion.answerIndex) {
       setQuizScore(prev => prev + 1);
     }
 
@@ -74,16 +77,18 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       setQuizFinished(true);
+      const pointsEarned = quizScore * 5 + (parseInt(selectedAnswer) === currentQuestion.answerIndex ? 5 : 0);
       if (!appState.quizTaken) {
         setAppState(prev => ({...prev, quizTaken: true}));
-        addPoints(40, "Skin Quiz Completion");
+        addPoints(pointsEarned, "Skin Quiz Completion");
       }
     }
   };
   
   const resetAndCloseQuiz = () => {
     setIsQuizOpen(false);
-    setTimeout(() => { // Delay reset to allow dialog to close smoothly
+    // Delay reset to allow dialog to close smoothly
+    setTimeout(() => { 
         setQuizQuestions([]);
         setQuizFinished(false);
         setCurrentQuestionIndex(0);
@@ -158,12 +163,12 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
     {
       title: "Skin Quiz",
       description: "Take our skin quiz for personalized advice.",
-      reward: 40,
+      reward: 50,
       icon: <Gift className="w-6 h-6 text-primary" />,
       buttonText: "Take Quiz",
       action: startQuiz,
       disabled: appState.quizTaken,
-      constraint: "Once per user",
+      constraint: "Up to 50 points",
     },
     {
       title: "Refer a Friend",
@@ -231,7 +236,7 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
               {quizFinished ? "Quiz Complete!" : `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4 min-h-[250px] flex flex-col justify-center">
+          <div className="py-4 space-y-4 min-h-[300px] flex flex-col justify-center">
             {quizLoading ? (
               <div className="flex flex-col items-center justify-center text-center gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -242,12 +247,12 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
                 <Award className="w-16 h-16 text-yellow-500" />
                 <h3 className="text-2xl font-bold">Great job!</h3>
                 <p className="text-muted-foreground">You scored {quizScore} out of {quizQuestions.length}.</p>
-                <p className="font-bold text-primary text-lg">+40 Leaf Points have been added to your account!</p>
+                <p className="font-bold text-primary text-lg">+{quizScore * 5} Leaf Points have been added!</p>
               </div>
             ) : quizQuestions.length > 0 ? (
               <div className="space-y-4 animate-in fade-in">
                 <Label className="font-bold text-base text-center block">{quizQuestions[currentQuestionIndex].question}</Label>
-                <RadioGroup onValueChange={(v) => setSelectedAnswer(parseInt(v))} value={selectedAnswer?.toString()}>
+                <RadioGroup onValueChange={setSelectedAnswer} value={selectedAnswer ?? undefined}>
                   {quizQuestions[currentQuestionIndex].options.map((option, index) => (
                     <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 border rounded-md">
                       <RadioGroupItem value={index.toString()} id={`q${currentQuestionIndex}-o${index}`} />

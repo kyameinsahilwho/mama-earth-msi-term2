@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Hand, Leaf, Award, ShoppingBag } from "lucide-react";
+import { Hand, Leaf, Award, ShoppingBag, ArrowRight } from "lucide-react";
 
 const flowSteps = [
   {
@@ -32,11 +32,11 @@ export default function JourneyFlow() {
     <section className="py-12 md:py-20 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-10 font-headline">Your Journey to Rewards</h2>
-        <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-stretch">
           {flowSteps.map((step, index) => (
-            <React.Fragment key={step.title}>
-              <Card className="text-center p-6">
-                <CardContent className="p-0">
+            <div key={step.title} className="flex flex-col items-center">
+              <Card className="text-center p-6 flex-grow flex flex-col w-full">
+                <CardContent className="p-0 flex flex-col items-center justify-center flex-grow">
                   <div className="flex justify-center mb-4">
                     <div className="bg-primary/10 p-4 rounded-full">
                       {step.icon}
@@ -47,13 +47,11 @@ export default function JourneyFlow() {
                 </CardContent>
               </Card>
               {index < flowSteps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 left-0 w-full h-px -translate-y-1/2">
-                   <svg width="100%" height="100%" className="text-border">
-                        <line x1={`${(index + 0.5) * 25}%`} y1="0" x2={`${(index + 1.5) * 25}%`} y2="0" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" transform="translate(0, 12)" />
-                   </svg>
+                <div className="hidden md:flex items-center justify-center h-full mx-4">
+                   <ArrowRight className="w-6 h-6 text-muted-foreground" />
                 </div>
               )}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>
