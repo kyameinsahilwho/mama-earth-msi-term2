@@ -14,7 +14,7 @@ const badgeIcons: { [key: string]: React.ReactNode } = {
 };
 
 const badgeColors = {
-  unlocked: "bg-primary/10 text-primary-foreground border-primary/20",
+  unlocked: "bg-gradient-to-br from-yellow-100 via-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.5)] relative overflow-hidden",
   locked: "bg-muted text-muted-foreground border-border",
 };
 
@@ -32,18 +32,21 @@ export default function AchievementBadges({ badges }: AchievementBadgesProps) {
             badge.unlocked ? badgeColors.unlocked : badgeColors.locked
           }`}
         >
-          <CardHeader className="items-center pb-2">
+          {badge.unlocked && (
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-12 animate-shine pointer-events-none" />
+          )}
+          <CardHeader className="items-center pb-2 relative z-10">
             <div
               className={`p-4 rounded-full mb-2 ${
-                badge.unlocked ? "bg-accent" : "bg-muted-foreground/20"
+                badge.unlocked ? "bg-white/40 backdrop-blur-sm shadow-inner" : "bg-muted-foreground/20"
               }`}
             >
               {badgeIcons[badge.name]}
             </div>
-            <CardTitle className="text-base font-semibold">{badge.name}</CardTitle>
+            <CardTitle className="text-base font-bold drop-shadow-sm">{badge.name}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="relative z-10">
+            <p className={`text-sm ${badge.unlocked ? "text-yellow-900 font-medium" : "text-muted-foreground"}`}>
               {badge.unlocked ? "Unlocked!" : `Reach ${badge.points} points`}
             </p>
           </CardContent>

@@ -48,13 +48,21 @@ export default function Leaderboard({ userPoints }: LeaderboardProps) {
             {users.map((user, index) => (
               <TableRow
                 key={index}
-                className={user.username === "You" ? "bg-accent" : ""} // "You" logic needs real auth check
+                className={`${user.username === "You" ? "bg-accent" : ""} ${index < 3 ? "relative overflow-hidden" : ""}`}
               >
-                <TableCell className="font-medium text-center">
-                  {index === 0 ? <Trophy className="w-5 h-5 text-yellow-500 inline"/> : index + 1}
+                <TableCell className="font-medium text-center relative">
+                  {index === 0 && <Trophy className="w-5 h-5 text-yellow-500 inline relative z-10 drop-shadow-md" />}
+                  {index === 1 && <Trophy className="w-5 h-5 text-gray-400 inline relative z-10" />}
+                  {index === 2 && <Trophy className="w-5 h-5 text-amber-700 inline relative z-10" />}
+                  {index > 2 && index + 1}
+                  
+                  {/* Golden Shine Effect for Top 3 */}
+                  {index < 3 && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shine pointer-events-none" />
+                  )}
                 </TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell className="text-right">{user.points}</TableCell>
+                <TableCell className="font-bold">{user.username}</TableCell>
+                <TableCell className="text-right font-mono">{user.points}</TableCell>
               </TableRow>
             ))}
             {users.length === 0 && (

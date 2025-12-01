@@ -7,7 +7,6 @@ import { RotateCw, Ticket, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AppState } from "@/lib/types";
 import { recordSpin } from "@/lib/gamified-service";
-import "./spin-wheel.css";
 
 interface SpinWheelProps {
   appState: AppState;
@@ -16,12 +15,12 @@ interface SpinWheelProps {
 }
 
 const segments = [
-  { type: "points", value: 10, label: "+10 Points" },
-  { type: "discount", value: 5, label: "5% Off" },
-  { type: "points", value: 50, label: "+50 Points" },
-  { type: "try_again", value: 0, label: "Try Again" },
-  { type: "points", value: 20, label: "+20 Points" },
-  { type: "discount", value: 10, label: "10% Off" },
+  { type: "points", value: 10, label: "+10 Points", color: "#e6f4ea" }, // Light Green
+  { type: "discount", value: 5, label: "5% Off", color: "#ccebd6" }, // Medium Green
+  { type: "points", value: 50, label: "+50 Points", color: "#e6f4ea" },
+  { type: "try_again", value: 0, label: "Try Again", color: "#ccebd6" },
+  { type: "points", value: 20, label: "+20 Points", color: "#e6f4ea" },
+  { type: "discount", value: 10, label: "10% Off", color: "#ccebd6" },
 ];
 
 export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: SpinWheelProps) {
@@ -43,9 +42,16 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
     setIsSpinning(true);
     const randomSegment = Math.floor(Math.random() * segments.length);
     const segmentAngle = 360 / segments.length;
-    const stopAngle = randomSegment * segmentAngle + segmentAngle / 2;
-    const randomOffset = Math.random() * (segmentAngle * 0.8) - (segmentAngle * 0.4);
-    const finalRotation = rotation + 360 * 5 + stopAngle + randomOffset;
+    
+    // Calculate stop angle to land in the middle of the segment
+    // We want the pointer (at top, 270deg or -90deg visually) to point to the segment
+    // The wheel rotates clockwise.
+    // If we want segment i to be at the top:
+    // Rotation = - (i * segmentAngle)
+    // Add some full rotations (360 * 5)
+    
+    const stopAngle = -(randomSegment * segmentAngle); 
+    const finalRotation = rotation + 360 * 5 + stopAngle;
     
     setRotation(finalRotation);
 
@@ -73,37 +79,68 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
           description: "Spin again after completing your next routine.",
         });
       }
-       // For this prototype, we allow another spin right away if they completed a routine
-       // In a real app, you'd track spins per day
-    }, 5000); // Corresponds to CSS transition duration
+    }, 5000);
   };
+  
+  const radius = 100;
+  const center = 100;
   
   return (
     <Card>
       <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
         <div className="relative w-64 h-64 md:w-80 md:h-80">
-          <div
-            className="wheel"
+          {/* SVG Wheel */}
+          <svg 
+            viewBox="0 0 200 200" 
+            className="w-full h-full transform transition-transform duration-[5000ms] cubic-bezier(0.25, 1, 0.5, 1)"
             style={{ transform: `rotate(${rotation}deg)` }}
           >
-            {segments.map((segment, index) => (
-              <div
-                key={index}
-                className="segment"
-                style={{ "--i": index, "--total": segments.length } as React.CSSProperties}
-              >
-                <span className="segment-label">
-                  {segment.type === 'points' && <Gift className="w-4 h-4 inline-block mr-1" />}
-                  {segment.type === 'discount' && <Ticket className="w-4 h-4 inline-block mr-1" />}
-                  {segment.label}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-background rounded-full border-4 border-secondary flex items-center justify-center">
+            {segments.map((segment, index) => {
+              const angle = 360 / segments.length;
+              const startAngle = index * angle;
+              const endAngle = (index + 1) * angle;
+              
+              // Convert polar to cartesian
+              const x1 = center + radius * Math.cos(Math.PI * startAngle / 180);
+              const y1 = center + radius * Math.sin(Math.PI * startAngle / 180);
+              const x2 = center + radius * Math.cos(Math.PI * endAngle / 180);
+              const y2 = center + radius * Math.sin(Math.PI * endAngle / 180);
+              
+              // SVG Path command
+              const d = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z`;
+              
+              // Text position (midpoint of segment, slightly inwards)
+              const midAngle = startAngle + angle / 2;
+              const textRadius = radius * 0.65;
+              const tx = center + textRadius * Math.cos(Math.PI * midAngle / 180);
+              const ty = center + textRadius * Math.sin(Math.PI * midAngle / 180);
+
+              return (
+                <g key={index}>
+                  <path d={d} fill={segment.color} stroke="#fff" strokeWidth="2" />
+                  <g transform={`translate(${tx}, ${ty}) rotate(${midAngle + 90})`}>
+                    <text 
+                      textAnchor="middle" 
+                      dominantBaseline="middle" 
+                      fill="#1a1a1a" 
+                      fontSize="10" 
+                      fontWeight="bold"
+                    >
+                      {segment.label}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Center Pin */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full border-4 border-primary flex items-center justify-center shadow-lg z-10">
              <div className="w-3 h-3 bg-primary rounded-full"></div>
           </div>
-          <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-[16px] border-t-primary"></div>
+          
+          {/* Pointer */}
+          <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-[20px] border-t-primary z-20 drop-shadow-md"></div>
         </div>
 
         <div className="flex flex-col items-center md:items-start text-center md:text-left flex-1">
@@ -122,3 +159,4 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
     </Card>
   );
 }
+
