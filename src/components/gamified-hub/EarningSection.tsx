@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -68,8 +68,10 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
     if (selectedAnswer === null) return;
 
     const currentQuestion = quizQuestions[currentQuestionIndex];
+    let score = quizScore;
     if (parseInt(selectedAnswer) === currentQuestion.answerIndex) {
-      setQuizScore(prev => prev + 1);
+      score = score + 1;
+      setQuizScore(score);
     }
 
     setSelectedAnswer(null);
@@ -77,11 +79,11 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       setQuizFinished(true);
-      const pointsEarned = quizScore * 5 + (parseInt(selectedAnswer) === currentQuestion.answerIndex ? 5 : 0);
-      if (!appState.quizTaken) {
-        setAppState(prev => ({...prev, quizTaken: true}));
-        addPoints(pointsEarned, "Skin Quiz Completion");
+      const pointsEarned = score * 5;
+      if (!appState.quizTaken && pointsEarned > 0) {
+        addPoints(pointsEarned, `Skin Quiz (${score}/${quizQuestions.length})`);
       }
+      setAppState(prev => ({...prev, quizTaken: true}));
     }
   };
   

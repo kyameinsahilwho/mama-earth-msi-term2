@@ -34,21 +34,23 @@ export default function JourneyFlow() {
         <h2 className="text-3xl font-bold text-center mb-10 font-headline">Your Journey to Rewards</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-stretch">
           {flowSteps.map((step, index) => (
-            <div key={step.title} className="flex flex-col items-center">
-              <Card className="text-center p-6 flex-grow flex flex-col w-full">
-                <CardContent className="p-0 flex flex-col items-center justify-center flex-grow">
-                  <div className="flex justify-center mb-4">
-                    <div className="bg-primary/10 p-4 rounded-full">
-                      {step.icon}
+            <div key={step.title} className="flex items-center">
+              <div className="flex flex-col items-center flex-grow">
+                <Card className="text-center p-6 flex-grow flex flex-col w-full">
+                  <CardContent className="p-0 flex flex-col items-center justify-center flex-grow">
+                    <div className="flex justify-center mb-4">
+                      <div className="bg-primary/10 p-4 rounded-full">
+                        {step.icon}
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 font-headline">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
+                    <h3 className="text-lg font-semibold mb-2 font-headline">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </CardContent>
+                </Card>
+              </div>
               {index < flowSteps.length - 1 && (
                 <div className="hidden md:flex items-center justify-center h-full mx-4">
-                   <ArrowRight className="w-6 h-6 text-muted-foreground" />
+                  <ArrowRight className="w-6 h-6 text-muted-foreground" />
                 </div>
               )}
             </div>
