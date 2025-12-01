@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Droplets, Sprout, Plus, Ticket, TreePine } from "lucide-react";
+import { Droplets, Sprout, Plus, Ticket, TreePine, Share2, Download } from "lucide-react";
 import { useGamification } from "@/context/GamificationContext";
 import { getUserPlants, plantSeed, waterPlant, DbPlant } from "@/lib/gamified-service";
 import PixelPlant from "@/components/gamified-hub/PixelPlant";
 import { useToast } from "@/hooks/use-toast";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
 
 export default function GardenPage() {
   const { appState, addPoints } = useGamification();
@@ -28,6 +29,10 @@ export default function GardenPage() {
   // Naming Dialog State
   const [isNamingOpen, setIsNamingOpen] = useState(false);
   const [newPlantName, setNewPlantName] = useState("");
+
+  // Share Dialog State
+  const [sharingPlant, setSharingPlant] = useState<DbPlant | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   const fetchPlants = async () => {
     if (appState.user?.id) {
@@ -110,6 +115,27 @@ export default function GardenPage() {
     }
   };
 
+  const handleDownloadImage = async () => {
+    if (shareRef.current) {
+      try {
+        const canvas = await html2canvas(shareRef.current, {
+            backgroundColor: null,
+            scale: 2, // Higher resolution
+        });
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = `mamaearth-garden-${sharingPlant?.name || 'plant'}.png`;
+        link.click();
+        toast({ title: "Image Saved!", description: "Share it with your friends!" });
+        setSharingPlant(null);
+      } catch (e) {
+        console.error("Screenshot failed", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not generate image." });
+      }
+    }
+  };
+
   if (loading) return <div className="text-center py-10">Loading your garden...</div>;
 
   return (
@@ -129,7 +155,12 @@ export default function GardenPage() {
                     <CardHeader className="bg-primary/10 border-b-2 border-black pb-2">
                         <CardTitle className="flex justify-between items-center">
                             <span className="truncate max-w-[150px]" title={plant.name}>{plant.name}</span>
-                            <span className="text-xs bg-white px-2 py-1 rounded border border-black">Stage {plant.stage}/5</span>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSharingPlant(plant)}>
+                                    <Share2 className="h-4 w-4" />
+                                </Button>
+                                <span className="text-xs bg-white px-2 py-1 rounded border border-black">Stage {plant.stage}/5</span>
+                            </div>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex-grow flex flex-col items-center justify-center p-6 bg-sky-50/50 relative overflow-hidden">
@@ -256,6 +287,65 @@ export default function GardenPage() {
           <DialogFooter>
             <Button onClick={handlePlantSeed}>Plant Seed (50 pts)</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={!!sharingPlant} onOpenChange={(open) => !open && setSharingPlant(null)}>
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden bg-transparent border-none shadow-none">
+            <div className="flex flex-col items-center gap-4">
+                {/* Capture Area */}
+                <div 
+                    ref={shareRef} 
+                    className="w-full bg-gradient-to-br from-sky-100 to-green-100 p-6 rounded-xl border-4 border-white shadow-2xl flex flex-col items-center text-center space-y-4 relative overflow-hidden"
+                >
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                        <div className="absolute top-[-20px] left-[-20px] w-24 h-24 bg-yellow-300 rounded-full blur-xl"></div>
+                        <div className="absolute bottom-[-20px] right-[-20px] w-32 h-32 bg-green-300 rounded-full blur-xl"></div>
+                    </div>
+
+                    <div className="bg-white/80 backdrop-blur-sm px-4 py-1 rounded-full border border-green-200 shadow-sm z-10">
+                        <span className="text-xs font-bold text-green-800 tracking-wider uppercase">Mamaearth Growth Garden</span>
+                    </div>
+
+                    <div className="relative z-10 transform scale-110 my-4">
+                        {sharingPlant && <PixelPlant seed={sharingPlant.seed} stage={sharingPlant.stage} scale={6} />}
+                    </div>
+
+                    <div className="z-10 space-y-1">
+                        <h3 className="text-2xl font-black font-headline text-gray-800">{sharingPlant?.name}</h3>
+                        <p className="text-sm font-medium text-gray-600">Grown by {appState.user?.username || "Gardener"}</p>
+                    </div>
+
+                    <div className="z-10 w-full bg-white/50 rounded-lg p-3 flex justify-between items-center border border-white/60">
+                        <div className="flex flex-col items-start">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Stage</span>
+                            <span className="font-bold text-green-700">{sharingPlant?.stage}/5</span>
+                        </div>
+                        <div className="h-8 w-[1px] bg-gray-300"></div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Watered</span>
+                            <span className="font-bold text-blue-600">{sharingPlant?.water_count} times</span>
+                        </div>
+                    </div>
+                    
+                    <div className="z-10 pt-2">
+                        <p className="text-[10px] text-gray-400 font-mono">Join me & plant real trees!</p>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 w-full">
+                    <Button className="flex-1 bg-white text-black border-2 border-black hover:bg-gray-100" onClick={() => setSharingPlant(null)}>
+                        Close
+                    </Button>
+                    <Button className="flex-1" onClick={handleDownloadImage}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Save Image
+                    </Button>
+                </div>
+            </div>
         </DialogContent>
       </Dialog>
     </div>

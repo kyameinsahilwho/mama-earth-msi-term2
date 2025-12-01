@@ -9,12 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   Trophy, Flame, Users, MessageSquare, LogOut, 
-  Leaf, Calendar, Award, Star 
+  Leaf, Calendar, Award, Star, Copy, CheckCircle 
 } from "lucide-react";
 import { format } from "date-fns";
+import { submitReferralCode } from "@/lib/gamified-service";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 export default function ProfilePage() {
-  const { appState, session, logout } = useGamification();
+  const { appState, session, logout, addPoints, setAppState } = useGamification();
+  const { toast } = useToast();
+  const [referralCode, setReferralCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   if (!session || !appState.user) {
     return <div>Loading profile...</div>;
@@ -33,6 +40,36 @@ export default function ProfilePage() {
   const progressToNext = nextBadge 
     ? ((appState.points - (currentBadge.points || 0)) / (nextBadge.points - (currentBadge.points || 0))) * 100
     : 100;
+
+  const handleReferralSubmit = async () => {
+    if (!referralCode.trim()) return;
+    if (!appState.user?.id) return;
+
+    setIsSubmitting(true);
+    try {
+      await submitReferralCode(appState.user.id, referralCode.trim());
+      toast({
+        title: "Referral Successful!",
+        description: "You earned 50 points for being referred.",
+      });
+      addPoints(50, "Referred by Friend");
+      // Update local state to hide input
+      setAppState(prev => ({ ...prev, referredBy: "submitted" })); 
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Referral Failed",
+        description: error.message || "Could not submit code.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(appState.user?.referralCode || "");
+    toast({ title: "Copied!", description: "Referral code copied to clipboard." });
+  };
 
   return (
     <div className="space-y-8">
@@ -126,6 +163,56 @@ export default function ProfilePage() {
               {nextBadge && <span>{nextBadge.points} Points Goal</span>}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Section */}
+      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-indigo-600" />
+            Refer a Friend
+          </CardTitle>
+          <CardDescription>
+            Invite friends to join Mamaearth Growth Garden. You get 100 points, they get 50!
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Your Code */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Your Referral Code</label>
+            <div className="flex gap-2">
+              <div className="flex-1 p-3 bg-white border rounded-md font-mono font-bold text-center tracking-wider">
+                {appState.user.referralCode || "Generating..."}
+              </div>
+              <Button variant="outline" onClick={copyReferralCode} className="shrink-0">
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Enter Friend's Code */}
+          {!appState.referredBy ? (
+            <div className="space-y-2 pt-4 border-t border-indigo-100">
+              <label className="text-sm font-medium text-muted-foreground">Have a referral code?</label>
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Enter friend's referral code" 
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  className="bg-white"
+                />
+                <Button onClick={handleReferralSubmit} disabled={isSubmitting || !referralCode}>
+                  {isSubmitting ? "..." : "Redeem"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md border border-green-100">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">You have already been referred!</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

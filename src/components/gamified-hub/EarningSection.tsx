@@ -19,7 +19,8 @@ interface EarningSectionProps {
 }
 
 export default function EarningSection({ appState, setAppState, addPoints }: EarningSectionProps) {
-  const today = new Date().toDateString();
+  // Use ISO string (YYYY-MM-DD) for consistent date comparison with DB
+  const today = new Date().toISOString().split('T')[0];
   const { toast } = useToast();
 
   // Modal States
@@ -32,7 +33,7 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
 
   // Referral State
-  const referralCode = `MAMA-${appState.user?.username?.toUpperCase().slice(0, 4) || "USER"}-2025`;
+  const referralCode = appState.user?.referralCode || "Generating...";
   const [copied, setCopied] = useState(false);
 
   // Feedback State

@@ -9,6 +9,7 @@ export interface Badge {
 export interface UserProfile {
   id: string;
   username: string;
+  referralCode?: string;
 }
 
 export interface AppState {
@@ -21,5 +22,6 @@ export interface AppState {
   streak: number;
   quizTaken: boolean;
   referrals: number;
+  referredBy?: string | null; // ID of the user who referred this user
   feedbackGiven: number;
 }

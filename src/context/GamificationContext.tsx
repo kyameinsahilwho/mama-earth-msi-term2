@@ -24,6 +24,7 @@ const INITIAL_STATE: AppState = {
   streak: 0,
   quizTaken: false,
   referrals: 0,
+  referredBy: null,
   feedbackGiven: 0,
 };
 
@@ -78,7 +79,11 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
       if (profile) {
         setAppState(prev => ({
           ...prev,
-          user: { id: profile.id, username: profile.username },
+          user: { 
+            id: profile.id, 
+            username: profile.username,
+            referralCode: profile.referral_code 
+          },
           points: profile.points,
           lastLoginDate: profile.last_login_date,
           lastRoutineDate: profile.last_routine_date,
@@ -86,6 +91,7 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
           streak: profile.streak,
           quizTaken: profile.quiz_taken,
           referrals: profile.referrals,
+          referredBy: profile.referred_by,
           feedbackGiven: profile.feedback_given,
           badges: badgeMilestones.map(b => ({
             ...b,

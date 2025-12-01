@@ -15,7 +15,9 @@ export interface DbProfile {
   streak: number;
   quiz_taken: boolean;
   referrals: number;
+  referred_by: string | null;
   feedback_given: number;
+  referral_code?: string;
 }
 
 export interface DbReward {
@@ -52,6 +54,7 @@ export async function getOrCreateProfile(user: User): Promise<DbProfile | null> 
   // Use email or metadata for username/display_name
   const username = user.user_metadata?.full_name || user.email?.split('@')[0] || `user_${user.id.slice(0, 8)}`;
   const avatarUrl = user.user_metadata?.avatar_url || null;
+  const referral_code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
   const { data: newProfile, error: createError } = await supabase
     .from('profiles')
@@ -59,7 +62,8 @@ export async function getOrCreateProfile(user: User): Promise<DbProfile | null> 
       auth_id: user.id,
       username, 
       display_name: username,
-      avatar_url: avatarUrl
+      avatar_url: avatarUrl,
+      referral_code
     }])
     .select()
     .single();
@@ -219,6 +223,56 @@ export async function recordSpin(profileId: string, result: any, pointsAwarded: 
   if (pointsAwarded > 0) {
     await addPoints(profileId, pointsAwarded, "Daily Spin Win");
   }
+}
+
+/**
+ * Submit a referral code.
+ */
+export async function submitReferralCode(currentUserId: string, referralCode: string) {
+  // 1. Find referrer by referral_code
+  const { data: referrer, error: findError } = await supabase
+    .from('profiles')
+    .select('id, referrals, points')
+    .eq('referral_code', referralCode)
+    .single();
+
+  if (findError || !referrer) {
+    throw new Error("Invalid referral code. User not found.");
+  }
+
+  if (referrer.id === currentUserId) {
+    throw new Error("You cannot refer yourself.");
+  }
+
+  // 2. Check if already referred
+  const { data: currentUser, error: userError } = await supabase
+    .from('profiles')
+    .select('referred_by')
+    .eq('id', currentUserId)
+    .single();
+
+  if (userError || !currentUser) throw new Error("User not found");
+  if (currentUser.referred_by) throw new Error("You have already been referred.");
+
+  // 3. Update current user (set referred_by)
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ referred_by: referrer.id })
+    .eq('id', currentUserId);
+
+  if (updateError) throw updateError;
+
+  // 4. Reward Referrer (e.g., +100 points, +1 referral count)
+  await updateProfile(referrer.id, { 
+    points: referrer.points + 100,
+    referrals: referrer.referrals + 1
+  });
+  await addPoints(referrer.id, 100, "Referral Bonus");
+
+  // 5. Reward Current User (e.g., +50 points)
+  await addPoints(currentUserId, 50, "Referred by Friend");
+  
+  return true;
 }
 
 export interface ActivityLogItem {
