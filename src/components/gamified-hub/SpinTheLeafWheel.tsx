@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RotateCw, Ticket, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AppState } from "@/lib/types";
+import { recordSpin } from "@/lib/gamified-service";
 import "./spin-wheel.css";
 
 interface SpinWheelProps {
@@ -51,6 +52,13 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
     setTimeout(() => {
       const winningSegment = segments[randomSegment];
       setIsSpinning(false);
+
+      // Record spin in DB
+      if (appState.user?.id) {
+        const points = winningSegment.type === "points" ? winningSegment.value : 0;
+        const discount = winningSegment.type === "discount" ? winningSegment.value : 0;
+        recordSpin(appState.user.id, winningSegment, points, discount);
+      }
 
       if (winningSegment.type === "points") {
         addPoints(winningSegment.value, "Spin the Wheel");

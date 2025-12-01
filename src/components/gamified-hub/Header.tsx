@@ -1,12 +1,14 @@
 "use client";
-import { Leaf } from "lucide-react";
+import { Leaf, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
   points: number;
+  onLogout?: () => void;
 }
 
-export default function Header({ points }: HeaderProps) {
+export default function Header({ points, onLogout }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -21,10 +23,17 @@ export default function Header({ points }: HeaderProps) {
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="text-base px-4 py-2 border-primary/50 bg-primary/10">
-          <Leaf className="w-4 h-4 mr-2 text-primary" />
-          <span className="font-bold text-primary">{points}</span>
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-base px-4 py-2 border-primary/50 bg-primary/10">
+            <Leaf className="w-4 h-4 mr-2 text-primary" />
+            <span className="font-bold text-primary">{points}</span>
+          </Badge>
+          {onLogout && (
+            <Button variant="ghost" size="icon" onClick={onLogout} title="Sign Out">
+              <LogOut className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );

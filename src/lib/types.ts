@@ -6,7 +6,13 @@ export interface Badge {
   unlocked: boolean;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+}
+
 export interface AppState {
+  user?: UserProfile; // Added user profile
   points: number;
   badges: Badge[];
   lastLoginDate: string | null;
