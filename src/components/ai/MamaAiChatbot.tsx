@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Send, X, Image as ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { chatWithMamaAi } from "@/ai/flows/chat-flow";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   role: 'user' | 'model';
@@ -106,8 +108,9 @@ export default function MamaAiChatbot() {
       </Button>
 
       {/* Chat Window */}
-      <div className={`fixed right-6 bottom-24 md:bottom-6 z-[60] transition-all duration-300 transform ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-10 pointer-events-none'}`}>
-        <Card className="w-[350px] md:w-[400px] h-[500px] flex flex-col shadow-2xl border-2 border-primary/20">
+      <div className={`fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-4 md:inset-10 z-[61] transition-all duration-300 transform ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-10'}`}>
+          <Card className="w-full h-full flex flex-col shadow-2xl border-2 border-primary/20 overflow-hidden">
           <CardHeader className="bg-primary text-primary-foreground p-4 flex flex-row items-center justify-between rounded-t-lg">
             <div className="flex items-center gap-2">
               <div className="bg-white/20 p-1.5 rounded-full">
@@ -147,7 +150,9 @@ export default function MamaAiChatbot() {
                         {msg.image && (
                           <img src={msg.image} alt="Uploaded" className="max-w-full rounded-md mb-2 border border-white/20" />
                         )}
-                        <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -218,6 +223,7 @@ export default function MamaAiChatbot() {
             </div>
           </CardFooter>
         </Card>
+        </div>
       </div>
     </>
   );

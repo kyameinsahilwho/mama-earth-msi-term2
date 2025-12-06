@@ -23,6 +23,7 @@ const INITIAL_STATE: AppState = {
   routineCountToday: 0,
   streak: 0,
   quizzesTakenToday: 0,
+  lastSpinDate: null,
   referrals: 0,
   referredBy: null,
   feedbackGiven: 0,
@@ -77,6 +78,37 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
     try {
       const profile = await getOrCreateProfile(user);
       if (profile) {
+        // Check for daily reset
+        const today = new Date().toISOString().split('T')[0];
+        let routineCount = profile.routine_count_today;
+        let quizzesTaken = profile.quizzes_taken_today || 0;
+        let lastLogin = profile.last_login_date;
+
+        if (lastLogin !== today) {
+            // It's a new day! Reset counters.
+            routineCount = 0;
+            quizzesTaken = 0;
+            lastLogin = today;
+            
+            // Update DB immediately
+            await updateProfile(profile.id, {
+                routine_count_today: 0,
+                quizzes_taken_today: 0,
+                last_login_date: today
+            });
+        }
+
+        // Fetch last spin date
+        const { data: lastSpin } = await supabase
+            .from('spins')
+            .select('created_at')
+            .eq('profile_id', profile.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+        
+        const lastSpinDate = lastSpin ? new Date(lastSpin.created_at).toISOString().split('T')[0] : null;
+
         setAppState(prev => ({
           ...prev,
           user: { 
@@ -85,18 +117,20 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
             referralCode: profile.referral_code 
           },
           points: profile.points,
-          lastLoginDate: profile.last_login_date,
+          lastLoginDate: lastLogin,
           lastRoutineDate: profile.last_routine_date,
-          routineCountToday: profile.routine_count_today,
+          routineCountToday: routineCount,
           streak: profile.streak,
-          quizzesTakenToday: profile.quizzes_taken_today || 0,
+          quizzesTakenToday: quizzesTaken,
           referrals: profile.referrals,
           referredBy: profile.referred_by,
           feedbackGiven: profile.feedback_given,
+          lastSpinDate: lastSpinDate,
           badges: badgeMilestones.map(b => ({
             ...b,
             unlocked: profile.points >= b.points
           }))
+        }));
         }));
       }
     } catch (err) {

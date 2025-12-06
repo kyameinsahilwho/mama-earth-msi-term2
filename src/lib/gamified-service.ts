@@ -454,3 +454,27 @@ export async function waterPlant(plantId: string) {
   if (updateError) throw updateError;
   return updated;
 }
+
+export async function submitFeedback(profileId: string, productName: string, rating: number, comment: string) {
+  const { data, error } = await supabase
+    .from('feedback')
+    .insert([{
+      profile_id: profileId,
+      product_name: productName,
+      rating,
+      comment
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error submitting feedback:', error);
+    throw error;
+  }
+  
+  // Award points for feedback
+  await addPoints(profileId, 30, `Feedback for ${productName}`);
+  
+  return data;
+}
+

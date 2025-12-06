@@ -11,6 +11,9 @@ import { Zap, Calendar, Star, Users, MessageSquare, Gift, Copy, Check, Loader2, 
 import type { AppState } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateQuiz, type QuizQuestion } from "@/ai/flows/quiz-flow";
+import { submitFeedback } from "@/lib/gamified-service";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface EarningSectionProps {
   appState: AppState;
@@ -24,6 +27,7 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
 
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -34,6 +38,12 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
   
   const referralCode = appState.user?.referralCode || "Generating...";
   const [copied, setCopied] = useState(false);
+
+  // Feedback State
+  const [feedbackProduct, setFeedbackProduct] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState("5");
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const startQuiz = async () => {
     if (appState.quizzesTakenToday >= 5) {
@@ -131,6 +141,31 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
     }
   };
 
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackProduct || !feedbackComment) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill in all fields." });
+      return;
+    }
+
+    setIsSubmittingFeedback(true);
+    try {
+      if (appState.user?.id) {
+        await submitFeedback(appState.user.id, feedbackProduct, parseInt(feedbackRating), feedbackComment);
+        setAppState(prev => ({...prev, feedbackGiven: (prev.feedbackGiven || 0) + 1}));
+        setIsFeedbackOpen(false);
+        setFeedbackProduct("");
+        setFeedbackComment("");
+        setFeedbackRating("5");
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to submit feedback." });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
   const earningCards = [
     {
       title: "Daily Login",
@@ -188,9 +223,9 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
       reward: 30,
       icon: <MessageSquare className="w-6 h-6 text-primary" />,
       buttonText: "Give Feedback",
-      action: () => {},
-      disabled: true,
-      constraint: "Coming soon",
+      action: () => setIsFeedbackOpen(true),
+      disabled: false,
+      constraint: "Unlimited",
     },
   ];
 
@@ -303,6 +338,59 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={() => setIsReferralOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
+        <DialogContent className="sm:max-w-[425px] border-2 border-black shadow-neo">
+          <DialogHeader>
+            <DialogTitle>Product Feedback</DialogTitle>
+            <DialogDescription>
+              Tell us about your experience and earn 30 points!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="product">Product Name</Label>
+              <Input 
+                id="product" 
+                placeholder="e.g. Onion Hair Oil" 
+                value={feedbackProduct}
+                onChange={(e) => setFeedbackProduct(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="rating">Rating</Label>
+              <Select value={feedbackRating} onValueChange={setFeedbackRating}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">⭐⭐⭐⭐⭐ (Excellent)</SelectItem>
+                  <SelectItem value="4">⭐⭐⭐⭐ (Good)</SelectItem>
+                  <SelectItem value="3">⭐⭐⭐ (Average)</SelectItem>
+                  <SelectItem value="2">⭐⭐ (Poor)</SelectItem>
+                  <SelectItem value="1">⭐ (Terrible)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="comment">Your Review</Label>
+              <Textarea 
+                id="comment" 
+                placeholder="What did you like or dislike?" 
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFeedbackOpen(false)}>Cancel</Button>
+            <Button onClick={handleFeedbackSubmit} disabled={isSubmittingFeedback}>
+              {isSubmittingFeedback && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit Feedback
             </Button>
           </DialogFooter>
         </DialogContent>

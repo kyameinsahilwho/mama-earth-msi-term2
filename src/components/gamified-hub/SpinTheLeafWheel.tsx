@@ -31,10 +31,11 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
   const { toast } = useToast();
 
   useEffect(() => {
-    const today = new Date().toDateString();
+    const today = new Date().toISOString().split('T')[0];
     const hasCompletedRoutineToday = appState.lastRoutineDate === today && (appState.routineCountToday || 0) > 0;
-    setCanSpin(hasCompletedRoutineToday);
-  }, [appState.lastRoutineDate, appState.routineCountToday]);
+    const hasSpunToday = appState.lastSpinDate === today;
+    setCanSpin(hasCompletedRoutineToday && !hasSpunToday);
+  }, [appState.lastRoutineDate, appState.routineCountToday, appState.lastSpinDate]);
 
   const handleSpin = () => {
     if (isSpinning || !canSpin) return;
@@ -58,6 +59,9 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
     setTimeout(() => {
       const winningSegment = segments[randomSegment];
       setIsSpinning(false);
+      
+      const todayISO = new Date().toISOString().split('T')[0];
+      setAppState(prev => ({ ...prev, lastSpinDate: todayISO }));
 
       // Record spin in DB
       if (appState.user?.id) {
