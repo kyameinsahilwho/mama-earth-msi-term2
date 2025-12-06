@@ -45,6 +45,20 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
   const [feedbackComment, setFeedbackComment] = useState("");
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
+  const MAMAEARTH_PRODUCTS = [
+    "Onion Hair Oil",
+    "Ubtan Face Wash",
+    "Vitamin C Face Serum",
+    "Tea Tree Face Wash",
+    "CoCo Face Mask",
+    "Rice Water Shampoo",
+    "Aloe Vera Gel",
+    "Charcoal Face Wash",
+    "Bye Bye Blemishes Face Cream",
+    "Retinol Face Serum",
+    "Other"
+  ];
+
   const startQuiz = async () => {
     if (appState.quizzesTakenToday >= 5) {
       toast({ title: "Daily Limit Reached", description: "You can only take 5 quizzes per day." });
@@ -354,12 +368,18 @@ export default function EarningSection({ appState, setAppState, addPoints }: Ear
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="product">Product Name</Label>
-              <Input 
-                id="product" 
-                placeholder="e.g. Onion Hair Oil" 
-                value={feedbackProduct}
-                onChange={(e) => setFeedbackProduct(e.target.value)}
-              />
+              <Select value={feedbackProduct} onValueChange={setFeedbackProduct}>
+                <SelectTrigger id="product">
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MAMAEARTH_PRODUCTS.map((product) => (
+                    <SelectItem key={product} value={product}>
+                      {product}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="rating">Rating</Label>

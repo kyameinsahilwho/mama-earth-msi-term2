@@ -56,9 +56,8 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
     
     setRotation(finalRotation);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const winningSegment = segments[randomSegment];
-      setIsSpinning(false);
       
       const todayISO = new Date().toISOString().split('T')[0];
       setAppState(prev => ({ ...prev, lastSpinDate: todayISO }));
@@ -67,8 +66,14 @@ export default function SpinTheLeafWheel({ appState, setAppState, addPoints }: S
       if (appState.user?.id) {
         const points = winningSegment.type === "points" ? winningSegment.value : 0;
         const discount = winningSegment.type === "discount" ? winningSegment.value : 0;
-        recordSpin(appState.user.id, winningSegment, points, discount);
+        try {
+          await recordSpin(appState.user.id, winningSegment, points, discount);
+        } catch (error) {
+          console.error("Failed to record spin:", error);
+        }
       }
+
+      setIsSpinning(false);
 
       if (winningSegment.type === "points") {
         addPoints(winningSegment.value, "Spin the Wheel");
