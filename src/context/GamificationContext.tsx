@@ -131,7 +131,6 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
             unlocked: profile.points >= b.points
           }))
         }));
-        }));
       }
     } catch (err) {
       console.error("Failed to init user", err);
